@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Pregnancy Video Search</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <input type="text" name="query" placeholder="Enter your query..." required>
+    <button type="submit">Search</button>
+</form>
+
+{% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% endif %}
+
+{% if results %}
+    <h3>Results:</h3>
+    {% if results %}
+    <h3>Results:</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+        {% for video in results %}
+            <div style="width: 200px; text-align: center;">
+                <a href="{{ video.url }}" target="_blank">
+                    <img src="{{ video.thumbnail }}" alt="Thumbnail" style="width: 100%; border-radius: 8px;">
+                </a>
+                <p>
+                    <a href="{{ video.url }}" target="_blank">{{ video.url|truncatechars:30 }}</a>
+                </p>
+            </div>
+
+            
+        {% endfor %}
+    </div>
+    
+{% endif %}
+
+{% endif %}
+{% endblock %}

@@ -15,3 +15,16 @@ class WomanLoginForm(AuthenticationForm):
     class Meta:
         model = WomanUser
         fields = ['username', 'password']
+        
+from django import forms
+from .models import WomanUser
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = WomanUser
+        fields = [
+            'first_name', 'last_name', 'email',
+            'age', 'gender', 'phone_number', 'emergency_contact',
+            'address', 'profile_picture',
+        ]
+

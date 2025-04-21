@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Dashboard</h1>
+  <p>Welcome, {{ user.first_name|default:user.username }}!</p>
+
+  <ul>
+    <!-- <li><a href="{% url 'home' %}">Home</a></li> -->
+    <li><a href="{% url 'view_profile' %}">View Profile</a></li>
+    <!-- <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li> -->
+    <!-- <li><a href="{% url 'logout' %}">Logout</a></li>
+    <li><a href="{% url 'change_password' %}">Change Password</a></li> -->
+    <li><a href="{% url 'pregnancy_videos' %}">Pregnancy Video Suggestions</a></li>
+
+
+  </ul>
+{% endblock %}

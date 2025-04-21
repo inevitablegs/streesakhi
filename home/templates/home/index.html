@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Welcome to Streesakhi</h1>
+  <p>This is the homepage.</p>
+
+  <p>
+    <a href="{% url 'register' %}">Register</a> |
+    <a href="{% url 'login' %}">Login</a>
+  </p>
+{% endblock %}
