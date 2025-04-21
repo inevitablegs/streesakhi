@@ -5,7 +5,7 @@ import functools
 from phi.model.google import Gemini
 from phi.agent import Agent
 
-API_KEY = "AIzaSyB6q337e1m4CAMgkXWHeUdEQs2cGTGKmZM"  # Replace with your actual key
+API_KEY = "GOOGLE_API_KEY"  # Replace with your actual key
 
 def _find_pregnancy_video_global_internal(query: str, api_key: str) -> str:
     """
