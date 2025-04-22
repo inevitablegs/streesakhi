@@ -40,7 +40,7 @@ class PregnancyUltrasoundAnalyzer:
 5. Final output: Combine all elements with warm tone""",
             tools=[TavilyTools(api_key=os.getenv("TAVILY_API_KEY"))],
             markdown=True,
-            # debug_mode=True,
+            debug_mode=True,
             show_tool_calls=True
         )
 
@@ -64,7 +64,7 @@ class PregnancyUltrasoundAnalyzer:
                 
             )],
             markdown=True,
-            # debug_mode=True,
+            debug_mode=True,
             show_tool_calls=True
         )
 
@@ -170,11 +170,11 @@ if __name__ == "__main__":
     analyzer = PregnancyUltrasoundAnalyzer()
     
     try:
-        print("🔍 Analyzing...")
+        print("🔍 Analyzing your ultrasound...")
         result = analyzer.analyze([
-            "image1.jpeg",
-            "image2.jpeg",
-            "image3.jpeg",
+            "image1.png",
+            "image2.png",
+            "image3.png",
 
         ])
         

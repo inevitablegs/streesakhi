@@ -13,6 +13,8 @@ import re
 import googleapiclient.discovery
 import googleapiclient.errors
 import os
+from reports import PregnancyUltrasoundAnalyzer
+import base64
 
 
 
@@ -384,4 +386,123 @@ def nutrition_tracker(request):
     return render(request, 'maa/nutrition_tracker.html', {
         'form':    form,
         'summary': summary,
+    })
+
+
+
+from django.core.files.storage import FileSystemStorage
+from django.utils import timezone
+
+@login_required
+def ultrasound_analysis(request):
+    report = None
+    error = None
+    image_data_urls = []
+
+    if request.method == 'POST':
+        # Handle file uploads
+        uploaded_files = request.FILES.getlist('ultrasound_images')
+        # Handle camera captures (base64 data)
+        camera_images = request.POST.getlist('camera_images[]')
+        
+        file_paths = []
+        fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'ultrasounds'))
+        
+        try:
+            # Process uploaded files
+            for file in uploaded_files:
+                filename = fs.save(f"{timezone.now().timestamp()}_{file.name}", file)
+                file_paths.append(os.path.join(fs.location, filename))
+            
+            # Process camera captures
+            for i, image_data in enumerate(camera_images):
+                if image_data.startswith('data:image'):
+                    format, imgstr = image_data.split(';base64,') 
+                    ext = format.split('/')[-1] 
+                    filename = f"camera_capture_{timezone.now().timestamp()}_{i}.{ext}"
+                    filepath = os.path.join(fs.location, filename)
+                    
+                    with open(filepath, 'wb') as f:
+                        f.write(base64.b64decode(imgstr))
+                    file_paths.append(filepath)
+            
+            if file_paths:
+                analyzer = PregnancyUltrasoundAnalyzer()
+                report = analyzer.analyze(file_paths)
+            
+            # Clean up files
+            for path in file_paths:
+                if os.path.exists(path):
+                    os.remove(path)
+                    
+        except Exception as e:
+            error = f"Error analyzing ultrasound: {str(e)}"
+            # Clean up any partially processed files
+            for path in file_paths:
+                if os.path.exists(path):
+                    os.remove(path)
+
+    return render(request, 'maa/ultrasound_analysis.html', {
+        'report': report,
+        'error': error,
+        'image_data_urls': image_data_urls
+    })
+
+from medicine_analyzer import analyze_image_file  # You'll need to create this file
+import base64
+
+@login_required
+def medicine_analysis(request):
+    analysis = None
+    error = None
+    image_data_urls = []
+
+    if request.method == 'POST':
+        # Handle file uploads
+        uploaded_files = request.FILES.getlist('medicine_images')
+        # Handle camera captures (base64 data)
+        camera_images = request.POST.getlist('camera_images[]')
+        
+        file_paths = []
+        fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'medicines'))
+        
+        try:
+            # Process uploaded files
+            for file in uploaded_files:
+                filename = fs.save(f"{timezone.now().timestamp()}_{file.name}", file)
+                file_paths.append(os.path.join(fs.location, filename))
+            
+            # Process camera captures
+            for i, image_data in enumerate(camera_images):
+                if image_data.startswith('data:image'):
+                    format, imgstr = image_data.split(';base64,') 
+                    ext = format.split('/')[-1] 
+                    filename = f"camera_capture_{timezone.now().timestamp()}_{i}.{ext}"
+                    filepath = os.path.join(fs.location, filename)
+                    
+                    with open(filepath, 'wb') as f:
+                        f.write(base64.b64decode(imgstr))
+                    file_paths.append(filepath)
+            
+            if file_paths:
+                # Analyze the first image (you could modify to handle multiple)
+                with open(file_paths[0], 'rb') as f:
+                    analysis = analyze_image_file(f.read(), os.path.splitext(file_paths[0])[-1])
+            
+            # Clean up files
+            for path in file_paths:
+                if os.path.exists(path):
+                    os.remove(path)
+                    
+        except Exception as e:
+            error = f"Error analyzing medicine: {str(e)}"
+            # Clean up any partially processed files
+            for path in file_paths:
+                if os.path.exists(path):
+                    os.remove(path)
+
+    return render(request, 'maa/medicine_analysis.html', {
+        'analysis': analysis,
+        'error': error,
+        'image_data_urls': image_data_urls
     })

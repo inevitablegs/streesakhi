@@ -1,0 +1,272 @@
+{% extends 'base.html' %} {% block content %}
+<div class="ultrasound-container">
+    <h2>Ultrasound Report Analysis</h2>
+
+    <div class="upload-section">
+        <h3>Upload or Capture Ultrasound Images</h3>
+        <p>For best results, provide clear images of your ultrasound scans.</p>
+
+        <div class="upload-options">
+            <!-- File Upload Option -->
+            <div class="upload-option">
+                <h4>Upload Images</h4>
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    {% csrf_token %}
+                    <div class="file-upload">
+                        <input type="file" id="fileInput" name="ultrasound_images" multiple accept="image/*" capture="environment">
+                        <label for="fileInput" class="file-upload-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Choose Files</span>
+                        </label>
+                        <p>Supports JPG, PNG (max 5MB each)</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Camera Capture Option -->
+            <div class="upload-option">
+                <h4>Use Camera</h4>
+                <div class="camera-container">
+                    <video id="cameraPreview" autoplay playsinline style="display:none;"></video>
+                    <canvas id="cameraCanvas" style="display:none;"></canvas>
+                    <button id="startCamera" class="camera-button">
+                        <i class="fas fa-camera"></i> Start Camera
+                    </button>
+                    <button id="captureButton" class="camera-button" style="display:none;">
+                        <i class="fas fa-circle"></i> Capture Image
+                    </button>
+                    <button id="stopCamera" class="camera-button" style="display:none;">
+                        <i class="fas fa-stop"></i> Stop Camera
+                    </button>
+                </div>
+                <div id="capturedImages"></div>
+            </div>
+        </div>
+
+        <button type="submit" form="uploadForm" class="analyze-button">
+            <i class="fas fa-search"></i> Analyze Images
+        </button>
+    </div>
+
+    {% if error %}
+    <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+    </div>
+    {% endif %} {% if report %}
+    <div class="report-section">
+        <h3>Your Analysis Report</h3>
+        <div class="report-content">
+            {{ report|safe }}
+        </div>
+        <div class="report-actions">
+            <button onclick="window.print()" class="action-button">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+            <button onclick="downloadReport()" class="action-button">
+                <i class="fas fa-download"></i> Download PDF
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Include Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+    .ultrasound-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .upload-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    
+    .upload-options {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+    
+    .upload-option {
+        flex: 1;
+        min-width: 300px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .file-upload {
+        margin: 15px 0;
+        text-align: center;
+    }
+    
+    .file-upload-label {
+        display: inline-block;
+        padding: 12px 20px;
+        background: #4CAF50;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .file-upload-label:hover {
+        background: #3e8e41;
+    }
+    
+    .file-upload input[type="file"] {
+        display: none;
+    }
+    
+    .camera-container {
+        text-align: center;
+        margin: 15px 0;
+    }
+    
+    .camera-button {
+        padding: 10px 15px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        margin: 5px;
+        cursor: pointer;
+    }
+    
+    #capturedImages {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .captured-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+    }
+    
+    .analyze-button {
+        background: #4CAF50;
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 15px;
+        width: 100%;
+    }
+    
+    .report-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .action-button {
+        padding: 8px 15px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    // Camera functionality
+    const startCamera = document.getElementById('startCamera');
+    const stopCamera = document.getElementById('stopCamera');
+    const captureButton = document.getElementById('captureButton');
+    const cameraPreview = document.getElementById('cameraPreview');
+    const cameraCanvas = document.getElementById('cameraCanvas');
+    const capturedImages = document.getElementById('capturedImages');
+    const uploadForm = document.getElementById('uploadForm');
+    let stream = null;
+    let captures = [];
+
+    startCamera.addEventListener('click', async() => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment',
+                    width: {
+                        ideal: 1280
+                    },
+                    height: {
+                        ideal: 720
+                    }
+                },
+                audio: false
+            });
+            cameraPreview.srcObject = stream;
+            cameraPreview.style.display = 'block';
+            startCamera.style.display = 'none';
+            captureButton.style.display = 'inline-block';
+            stopCamera.style.display = 'inline-block';
+        } catch (err) {
+            alert('Could not access the camera: ' + err);
+        }
+    });
+
+    stopCamera.addEventListener('click', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            cameraPreview.style.display = 'none';
+            startCamera.style.display = 'inline-block';
+            captureButton.style.display = 'none';
+            stopCamera.style.display = 'none';
+        }
+    });
+
+    captureButton.addEventListener('click', () => {
+        // Set canvas size to match video frame
+        cameraCanvas.width = cameraPreview.videoWidth;
+        cameraCanvas.height = cameraPreview.videoHeight;
+
+        // Draw current video frame to canvas
+        const ctx = cameraCanvas.getContext('2d');
+        ctx.drawImage(cameraPreview, 0, 0, cameraCanvas.width, cameraCanvas.height);
+
+        // Get image data URL and store it
+        const imageDataUrl = cameraCanvas.toDataURL('image/jpeg', 0.8);
+        captures.push(imageDataUrl);
+
+        // Display captured image
+        const img = document.createElement('img');
+        img.src = imageDataUrl;
+        img.className = 'captured-image';
+        capturedImages.appendChild(img);
+
+        // Create hidden input for form submission
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'camera_images[]';
+        input.value = imageDataUrl;
+        uploadForm.appendChild(input);
+    });
+
+    // Handle form submission with captures
+    uploadForm.addEventListener('submit', function(e) {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+
+    function downloadReport() {
+        // Implement PDF download functionality
+        alert('PDF download functionality would be implemented here');
+    }
+</script>
+{% endblock %}

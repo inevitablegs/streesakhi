@@ -1,20 +1,49 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} {% block content %}
+<h1>Dashboard</h1>
+<p>Welcome, {{ user.first_name|default:user.username }}!</p>
 
-{% block content %}
-  <h1>Dashboard</h1>
-  <p>Welcome, {{ user.first_name|default:user.username }}!</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 30px;">
+    <div class="dashboard-card">
+        <h3>Pregnancy Videos</h3>
+        <p>Search for educational pregnancy videos</p>
+        <a href="{% url 'pregnancy_videos' %}" class="dashboard-button">Go to Videos</a>
+    </div>
 
-  <ul>
-    <!-- <li><a href="{% url 'home' %}">Home</a></li> -->
-    <li><a href="{% url 'view_profile' %}">View Profile</a></li>
-    <!-- <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li> -->
-    <!-- <li><a href="{% url 'logout' %}">Logout</a></li>
-    <li><a href="{% url 'change_password' %}">Change Password</a></li> -->
-    <li><a href="{% url 'pregnancy_videos' %}">Pregnancy Video Suggestions</a></li>
-    <li><a href="{% url 'nutrition_tool' %}">Nutrition Analyzer</a></li>
-    <li><a href="{% url 'nutrition_tracker' %}">Nutrition Tracker</a></li>
+    <div class="dashboard-card">
+        <h3>Nutrition Tools</h3>
+        <p>Analyze your nutrition and track meals</p>
+        <a href="{% url 'nutrition_tool' %}" class="dashboard-button">Nutrition Tools</a>
+    </div>
 
+    <div class="dashboard-card">
+        <h3>Analyze Ultrasound</h3>
+        <p>Upload ultrasound images for detailed analysis</p>
+        <a href="{% url 'ultrasound_analysis' %}" class="dashboard-button">Analyze Report</a>
+    </div>
 
+    <div class="dashboard-card">
+        <h3>Analyze Medicine</h3>
+        <p>Check medication safety during pregnancy</p>
+        <a href="{% url 'medicine_analysis' %}" class="dashboard-button">Analyze Medicine</a>
+    </div>
+</div>
 
-  </ul>
+<style>
+    .dashboard-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dashboard-button {
+        display: inline-block;
+        padding: 8px 15px;
+        background: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+</style>
 {% endblock %}

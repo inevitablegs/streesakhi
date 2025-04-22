@@ -4,6 +4,8 @@ from django.conf.urls.static import static
 from django.conf import settings
 from home.views import home_page
 from maa import views as maa_views
+from maa.views import ultrasound_analysis
+from maa.views import medicine_analysis
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -19,6 +21,8 @@ urlpatterns = [
     path('load-more-videos/', maa_views.load_more_videos, name='load_more_videos'),
     path('nutrition/', maa_views.nutrition_tool, name='nutrition_tool'),
     path('nutrition-tracker/', maa_views.nutrition_tracker,name='nutrition_tracker'),
+    path('ultrasound-analysis/', ultrasound_analysis, name='ultrasound_analysis'),
+    path('medicine-analysis/', medicine_analysis, name='medicine_analysis'),
 
 
 ]
