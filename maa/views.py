@@ -6,6 +6,15 @@ from .forms import WomanRegistrationForm, WomanLoginForm
 from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
+from phi.agent import Agent
+from phi.model.google import Gemini
+from phi.tools.youtube_tools import YouTubeTools
+import re
+import googleapiclient.discovery
+import googleapiclient.errors
+import os
+
+
 
 def register(request):
     if request.method == 'POST':
@@ -120,47 +129,146 @@ import subprocess
 import json
 import re
 
+API_KEY = os.getenv("YOUTUBE_API_KEY") 
+def youtube_search_tool(query: str) -> str:
+    """
+    Searches YouTube for pregnancy-related videos and returns URLs only.
+    Returns one URL per line or error message.
+    """
+    if not API_KEY or API_KEY == "YOUR_API_KEY":
+        return "Error: API key not configured."
+
+    return _find_pregnancy_video_global_internal(query=query, api_key=API_KEY)
+
+def _find_pregnancy_video_global_internal(query: str, api_key: str) -> str:
+    """
+    Internal function to search YouTube for top 3 videos.
+    Returns a string with video URLs separated by newlines or an error message.
+    """
+    if not query:
+        return "Error: No search query provided."
+
+    try:
+        youtube = googleapiclient.discovery.build(
+            "youtube", "v3", developerKey=api_key)
+        request = youtube.search().list(
+            part="snippet",
+            q=query,
+            type="video",
+            maxResults=3,
+            order="relevance"
+        )
+        response = request.execute()
+
+        video_urls = []
+        if response and 'items' in response:
+            for item in response['items']:
+                if 'videoId' in item.get('id', {}):
+                    video_id = item['id']['videoId']
+                    video_url = f"https://www.youtube.com/watch?v={video_id}"
+                    video_urls.append(video_url)
+
+        if video_urls:
+            return "\n".join(video_urls)
+        else:
+            return "No relevant videos found."
+
+    except googleapiclient.errors.HttpError as e:
+        error_content = e.content.decode('utf-8')
+        if e.resp.status == 403:
+            return "Error: YouTube API quota exceeded."
+        elif e.resp.status == 400:
+            return "Error: Invalid request."
+        else:
+            return f"Error: YouTube API error ({e.resp.status})."
+    except Exception as e:
+        return f"Error: {str(e)}"
+
 @login_required
 def pregnancy_video_tool(request):
     results = []
     error = None
+    chat_messages = []
 
     if request.method == 'POST':
         query = request.POST.get('query', '').strip()
         if query:
             try:
-                result = subprocess.run(
-                    ['python', 'pregnancy_video_agent.py'],
-                    input=query.encode('utf-8'),
-                    capture_output=True,
-                    check=True
+                # Add user message to chat
+                chat_messages.append({
+                    'sender': 'user',
+                    'content': query,
+                    
+                })
+
+                # Initialize the agent
+                agent = Agent(
+                    model=Gemini(id="gemini-2.0-flash-exp", temperature=0.2),
+                    tools=[youtube_search_tool, YouTubeTools()],
+                    temperature=0.3,
+                    instructions=[
+                        "When asked to find pregnancy-related videos, use youtube_search_tool.",
+                        "For each video URL found, immediately use YouTubeTools to get its details.",
+                        "Return only a clean list of videos with: title, thumbnail URL, video URL, and 1-2 sentence description.",
+                        "Format as: [TITLE](URL)\n[DESCRIPTION]\n[THUMBNAIL_URL]",
+                        "Do not include any tool call information or raw output."
+                    ],
                 )
-                raw_output = result.stdout.decode('utf-8')
 
-                links = re.findall(r'(https?://www\.youtube\.com/watch\?v=[\w-]+)', raw_output)
+                # Get the response from the agent
+                response = agent.run(query)
+                raw_output = response.content if hasattr(response, "content") else str(response)
 
-                # Add thumbnails
-                for link in links:
-                    video_id = link.split("v=")[-1]
-                    thumbnail_url = f"https://img.youtube.com/vi/{video_id}/0.jpg"
-                    results.append({
-                        'url': link,
-                        'thumbnail': thumbnail_url
+                # Parse the clean response
+                video_blocks = raw_output.split('\n\n')  # Split by double newlines
+                for block in video_blocks:
+                    lines = block.split('\n')
+                    if len(lines) >= 3:
+                        title_line = lines[0]
+                        description = lines[1]
+                        thumbnail_url = lines[2] if len(lines) > 2 else ""
+                        
+                        # Extract title and URL
+                        match = re.search(r'\[(.*?)\]\((.*?)\)', title_line)
+                        if match:
+                            title = match.group(1)
+                            url = match.group(2)
+                            
+                            # Get video ID for thumbnail if not provided
+                            if not thumbnail_url.startswith('http'):
+                                video_id = url.split('v=')[-1]
+                                thumbnail_url = f"https://img.youtube.com/vi/{video_id}/0.jpg"
+                            
+                            results.append({
+                                'title': title,
+                                'url': url,
+                                'thumbnail': thumbnail_url,
+                                'description': description
+                            })
+
+                # Add assistant message to chat
+                if results:
+                    chat_messages.append({
+                        'sender': 'assistant',
+                        'content': f"I found {len(results)} videos about '{query}'",
+                        
+                        'results': results
                     })
 
-            except subprocess.CalledProcessError as e:
-                error = "Agent failed to respond."
             except Exception as e:
                 error = f"Error: {str(e)}"
+                chat_messages.append({
+                    'sender': 'system',
+                    'content': error,
+                    
+                })
         else:
             error = "Please enter a query."
 
     return render(request, 'maa/pregnancy_videos.html', {
-        'results': results,
+        'chat_messages': chat_messages,
         'error': error
-    })
- 
- 
+    }) 
 from django.http import JsonResponse
 
 @login_required

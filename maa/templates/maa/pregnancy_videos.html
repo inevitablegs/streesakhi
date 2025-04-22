@@ -1,38 +1,138 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} {% block content %}
+<style>
+    .chat-container {
+        max-width: 800px;
+        margin: 0 auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .chat-header {
+        background-color: #4CAF50;
+        color: white;
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .chat-messages {
+        height: 500px;
+        overflow-y: auto;
+        padding: 15px;
+        background-color: #f9f9f9;
+    }
+    
+    .message {
+        margin-bottom: 15px;
+        max-width: 80%;
+    }
+    
+    .user-message {
+        margin-left: auto;
+        background-color: #e3f2fd;
+        padding: 10px 15px;
+        border-radius: 15px 15px 0 15px;
+    }
+    
+    .assistant-message {
+        margin-right: auto;
+        background-color: #f1f1f1;
+        padding: 10px 15px;
+        border-radius: 15px 15px 15px 0;
+    }
+    
+    .video-card {
+        display: flex;
+        margin-top: 10px;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .video-thumbnail {
+        width: 150px;
+        height: 100px;
+        object-fit: cover;
+    }
+    
+    .video-info {
+        padding: 10px;
+        flex-grow: 1;
+    }
+    
+    .video-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .video-description {
+        font-size: 14px;
+        color: #555;
+    }
+    
+    .search-form {
+        padding: 15px;
+        background-color: white;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .search-form input {
+        width: 75%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+    }
+    
+    .search-form button {
+        width: 20%;
+        padding: 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+    }
+</style>
 
-{% block content %}
-<h2>Pregnancy Video Search</h2>
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>Pregnancy Video Assistant</h2>
+    </div>
 
-<form method="post">
-    {% csrf_token %}
-    <input type="text" name="query" placeholder="Enter your query..." required>
-    <button type="submit">Search</button>
-</form>
-
-{% if error %}
-    <p style="color: red;">{{ error }}</p>
-{% endif %}
-
-{% if results %}
-    <h3>Results:</h3>
-    {% if results %}
-    <h3>Results:</h3>
-    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-        {% for video in results %}
-            <div style="width: 200px; text-align: center;">
-                <a href="{{ video.url }}" target="_blank">
-                    <img src="{{ video.thumbnail }}" alt="Thumbnail" style="width: 100%; border-radius: 8px;">
-                </a>
-                <p>
-                    <a href="{{ video.url }}" target="_blank">{{ video.url|truncatechars:30 }}</a>
-                </p>
+    <div class="chat-messages">
+        {% for message in chat_messages %}
+        <div class="message {% if message.sender == 'user' %}user-message{% else %}assistant-message{% endif %}">
+            {% if message.sender == 'user' %} {{ message.content }} {% else %} {{ message.content }} {% if message.results %} {% for video in message.results %}
+            <div class="video-card">
+                <img src="{{ video.thumbnail }}" class="video-thumbnail" alt="Video thumbnail">
+                <div class="video-info">
+                    <div class="video-title">
+                        <a href="{{ video.url }}" target="_blank">{{ video.title }}</a>
+                    </div>
+                    <div class="video-description">
+                        {{ video.description }}
+                    </div>
+                </div>
             </div>
-
-            
+            {% endfor %} {% endif %} {% endif %}
+        </div>
+        {% empty %}
+        <div class="message assistant-message">
+            Hi! I can help you find pregnancy-related videos. What would you like to search for?
+        </div>
         {% endfor %}
     </div>
-    
-{% endif %}
 
-{% endif %}
-{% endblock %}
+    <form method="post" class="search-form">
+        {% csrf_token %}
+        <input type="text" name="query" placeholder="Ask me about pregnancy videos..." required>
+        <button type="submit">Send</button>
+    </form>
+</div>
+
+{% if error %}
+<div style="color: red; text-align: center; margin-top: 10px;">
+    {{ error }}
+</div>
+{% endif %} {% endblock %}
