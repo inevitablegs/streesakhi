@@ -18,7 +18,7 @@ urlpatterns = [
     path('pregnancy-videos/', maa_views.pregnancy_video_tool, name='pregnancy_videos'),
     path('load-more-videos/', maa_views.load_more_videos, name='load_more_videos'),
     path('nutrition/', maa_views.nutrition_tool, name='nutrition_tool'),
-
+    path('nutrition-tracker/', maa_views.nutrition_tracker,name='nutrition_tracker'),
 
 
 ]

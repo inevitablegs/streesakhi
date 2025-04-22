@@ -1,0 +1,1 @@
+agent.print_response(prompt, markdown=True)

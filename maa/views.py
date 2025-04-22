@@ -224,3 +224,56 @@ def nutrition_tool(request):
         'result': result,
         'error': error
     })
+# maa/views.py
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import NutritionDayForm
+from .models import NutritionEntry
+from collections import OrderedDict
+from datetime import date, timedelta
+
+# maa/views.py
+
+from collections import OrderedDict
+from datetime import date, timedelta
+
+@login_required
+def nutrition_tracker(request):
+    form = NutritionDayForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        sel_date = form.cleaned_data['date']
+        for slot in ['morning','noon','evening','night']:
+            choice = form.cleaned_data[f'{slot}_choice']
+            manual = form.cleaned_data[f'{slot}_manual']
+            desc = choice or manual
+            if desc:
+                NutritionEntry.objects.update_or_create(
+                    user=request.user,
+                    date=sel_date,
+                    time_slot=slot.upper(),
+                    defaults={'description': desc}
+                )
+        return redirect('nutrition_tracker')
+
+    # last 7 days
+    today    = date.today()
+    week_ago = today - timedelta(days=6)
+    entries = NutritionEntry.objects.filter(
+        user=request.user,
+        date__range=[week_ago, today]
+    )
+
+    # build summary with lowercase keys
+    summary = OrderedDict()
+    for i in range(7):
+        d = week_ago + timedelta(days=i)
+        summary[d] = {'morning':'','noon':'','evening':'','night':''}
+
+    for e in entries:
+        summary[e.date][e.time_slot.lower()] = e.description
+
+    return render(request, 'maa/nutrition_tracker.html', {
+        'form':    form,
+        'summary': summary,
+    })

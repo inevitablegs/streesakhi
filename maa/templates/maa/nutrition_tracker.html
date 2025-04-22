@@ -1,0 +1,68 @@
+{# maa/templates/maa/nutrition_tracker.html #}
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Nutrition Tracker</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    <p>{{ form.date.label_tag }}<br>{{ form.date }}</p>
+
+    <table style="border-collapse: collapse; width:100%; max-width:600px;">
+      <thead>
+        <tr>
+          <th style="border:1px solid #ccc; padding:4px;">Slot</th>
+          <th style="border:1px solid #ccc; padding:4px;">Dropdown</th>
+          <th style="border:1px solid #ccc; padding:4px;">Or type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border:1px solid #ccc; padding:4px;">Morning</td>
+          <td style="border:1px solid #ccc; padding:4px;">{{ form.morning_choice }}</td>
+          <td style="border:1px solid #ccc; padding:4px;">{{ form.morning_manual }}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #ccc; padding:4px;">Noon</td>
+          <td style="border:1px solid #ccc; padding:4px;">{{ form.noon_choice }}</td>
+          <td style="border:1px solid #ccc; padding:4px;">{{ form.noon_manual }}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #ccc; padding:4px;">Evening</td>
+          <td style="border:1px solid #ccc; padding:4px;">{{ form.evening_choice }}</td>
+          <td style="border:1px solid #ccc; padding:4px;">{{ form.evening_manual }}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #ccc; padding:4px;">Night</td>
+          <td style="border:1px solid #ccc; padding:4px;">{{ form.night_choice }}</td>
+          <td style="border:1px solid #ccc; padding:4px;">{{ form.night_manual }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button type="submit" style="margin-top:1em;">Save Day’s Intake</button>
+  </form>
+
+  <h3 style="margin-top:2em;">Last 7 Days Summary</h3>
+  <table style="border-collapse: collapse; width:100%; max-width:800px;">
+    <thead>
+      <tr>
+        <th style="border:1px solid #ccc; padding:6px;">Date</th>
+        <th style="border:1px solid #ccc; padding:6px;">Morning</th>
+        <th style="border:1px solid #ccc; padding:6px;">Noon</th>
+        <th style="border:1px solid #ccc; padding:6px;">Evening</th>
+        <th style="border:1px solid #ccc; padding:6px;">Night</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for day, slots in summary.items %}
+        <tr>
+          <td style="border:1px solid #ccc; padding:6px;">{{ day }}</td>
+          <td style="border:1px solid #ccc; padding:6px;">{{ slots.morning }}</td>
+          <td style="border:1px solid #ccc; padding:6px;">{{ slots.noon }}</td>
+          <td style="border:1px solid #ccc; padding:6px;">{{ slots.evening }}</td>
+          <td style="border:1px solid #ccc; padding:6px;">{{ slots.night }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
