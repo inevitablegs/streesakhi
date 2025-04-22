@@ -17,6 +17,8 @@ urlpatterns = [
     path('password/change/', maa_views.CustomPasswordChangeView.as_view(), name='change_password'),
     path('pregnancy-videos/', maa_views.pregnancy_video_tool, name='pregnancy_videos'),
     path('load-more-videos/', maa_views.load_more_videos, name='load_more_videos'),
+    path('nutrition/', maa_views.nutrition_tool, name='nutrition_tool'),
+
 
 
 ]

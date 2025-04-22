@@ -4,8 +4,9 @@ import googleapiclient.errors
 import functools
 from phi.model.google import Gemini
 from phi.agent import Agent
+import os
 
-API_KEY = "GOOGLE_API_KEY"  # Replace with your actual key
+API_KEY = os.getenv("YOUTUBE_API_KEY") # Replace with your actual key
 
 def _find_pregnancy_video_global_internal(query: str, api_key: str) -> str:
     """

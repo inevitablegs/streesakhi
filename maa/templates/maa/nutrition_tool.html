@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Nutrition Analyzer</h2>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="image" accept="image/*" required>
+    <button type="submit">Analyze</button>
+  </form>
+
+  {% if result %}
+  <h3>Result:</h3>
+  <div style="padding: 1rem; border: 1px solid #ddd; border-radius: 8px;">
+    {{ result|safe }}
+  </div>
+{% endif %}
+
+
+  {% if error %}
+    <p style="color: red;">{{ error }}</p>
+  {% endif %}
+{% endblock %}

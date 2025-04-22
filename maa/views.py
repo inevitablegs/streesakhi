@@ -197,3 +197,30 @@ def load_more_videos(request):
             return JsonResponse({'videos': results})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+
+import os
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from nutrition import analyze_image_file
+import markdown
+@login_required
+def nutrition_tool(request):
+    result = None
+    error = None
+
+    if request.method == 'POST':
+        uploaded_file = request.FILES.get('image')
+        if uploaded_file:
+            try:
+                file_bytes = uploaded_file.read()
+                extension = os.path.splitext(uploaded_file.name)[-1]
+                raw_result = analyze_image_file(file_bytes, file_extension=extension)
+                result = markdown.markdown(raw_result)  # <-- This line converts markdown to HTML
+            except Exception as e:
+                error = f"Error analyzing image: {str(e)}"
+
+
+    return render(request, 'maa/nutrition_tool.html', {
+        'result': result,
+        'error': error
+    })
