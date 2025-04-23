@@ -1,0 +1,8 @@
+ youtube_transcript_api==1.0.3
+ phidata==2.7.10
+ django==4.0.1
+ markdown==3.7
+ google-generativeai==0.8.4
+ tavily-python==0.5.1
+ gunicorn==20.1.0
+ sqlalchemy==2.0.40
