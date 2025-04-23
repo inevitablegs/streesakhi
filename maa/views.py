@@ -312,7 +312,7 @@ def load_more_videos(request):
 import os
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from nutrition import analyze_image_file
+from nutrition import analyze_image_file2
 import markdown
 
 @login_required
@@ -331,14 +331,14 @@ def nutrition_tool(request):
                 # Process regular file upload
                 file_bytes = uploaded_file.read()
                 extension = os.path.splitext(uploaded_file.name)[-1]
-                analysis = analyze_image_file(file_bytes, file_extension=extension)
+                analysis = analyze_image_file2(file_bytes, file_extension=extension)
                 result = markdown.markdown(analysis)
                 
             elif camera_image:
                 # Process camera capture (base64)
                 format, imgstr = camera_image.split(';base64,') 
                 file_bytes = base64.b64decode(imgstr)
-                analysis = analyze_image_file(file_bytes, file_extension='.jpg')
+                analysis = analyze_image_file2(file_bytes, file_extension='.jpg')
                 result = markdown.markdown(analysis)
                 
             else:

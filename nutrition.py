@@ -92,7 +92,7 @@ def save_uploaded_file(uploaded_bytes, suffix='.jpg'):
         f.write(uploaded_bytes)
         return f.name
 
-def analyze_image_file(file_bytes, file_extension='.jpg'):
+def analyze_image_file2(file_bytes, file_extension='.jpg'):
     """Analyze an image from file bytes"""
     temp_path = save_uploaded_file(file_bytes, file_extension)
     analysis = analyze_image(temp_path)
@@ -103,5 +103,5 @@ def analyze_image_file(file_bytes, file_extension='.jpg'):
 if __name__ == "__main__":
     with open("food.jpeg", "rb") as f:
         file_bytes = f.read()
-    analysis = analyze_image_file(file_bytes)
+    analysis = analyze_image_file2(file_bytes)
     print(analysis)
