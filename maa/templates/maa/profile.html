@@ -1,21 +1,43 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2>Your Profile</h2>
-  {% if user.profile_picture %}
-    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" height="150">
-  {% else %}
-    <p>No profile picture uploaded.</p>
-  {% endif %}
-
-  <p><strong>Username:</strong> {{ user.username }}</p>
-  <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
-  <p><strong>Email:</strong> {{ user.email }}</p>
-  <p><strong>Age:</strong> {{ user.age }}</p>
-  <p><strong>Gender:</strong> {{ user.get_gender_display }}</p>
-  <p><strong>Phone:</strong> {{ user.phone_number }}</p>
-  <p><strong>Emergency Contact:</strong> {{ user.emergency_contact }}</p>
-  <p><strong>Address:</strong> {{ user.address }}</p>
-  <p><a href="{% url 'edit_profile' %}">Edit your profile</a></p>
-
-  
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-4xl mx-auto bg-pink-50 rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-pink-600 text-white p-6 text-center">
+          <h2 class="text-3xl font-bold">{{ user.first_name }}'s Profile</h2>
+        </div>
+        
+        <div class="p-8">
+            <div class="flex flex-col items-center mb-8">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="h-40 w-40 object-cover rounded-full border-4 border-pink-700">
+                {% else %}
+                    <div class="h-40 w-40 rounded-full border-4 border-pink-700 flex items-center justify-center bg-gray-100">
+                        <p class="text-gray-500 text-center px-4">No profile picture uploaded.</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <p class="text-lg"><span class="font-bold text-gray-900">Username:</span> <span class="text-black-700">{{ user.username }}</span></p>
+                    <p class="text-lg"><span class="font-bold text-gray-900">Name:</span> <span class="text-black-700">{{ user.first_name }} {{ user.last_name }}</span></p>
+                    <p class="text-lg"><span class="font-bold text-gray-900">Email:</span> <span class="text-black-700">{{ user.email }}</span></p>
+                    <p class="text-lg"><span class="font-bold text-gray-900">Age:</span> <span class="text-black-700">{{ user.age }}</span></p>
+                </div>
+                <div class="space-y-3">
+                    <p class="text-lg"><span class="font-bold text-gray-900">Gender:</span> <span class="text-black-700">{{ user.get_gender_display }}</span></p>
+                    <p class="text-lg"><span class="font-bold text-gray-900">Phone:</span> <span class="text-black-700">{{ user.phone_number }}</span></p>
+                    <p class="text-lg"><span class="font-bold text-gray-900">Emergency Contact:</span> <span class="text-black-700">{{ user.emergency_contact }}</span></p>
+                    <p class="text-lg"><span class="font-bold text-gray-900">Address:</span> <span class="text-black-700">{{ user.address }}</span></p>
+                </div>
+            </div>
+            
+            <div class="pt-6 text-center">
+                <a href="{% url 'edit_profile' %}" class="inline-block bg-pink-700 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full hover:shadow-lg transition transform hover:-translate-y-1 text-lg">
+                    Edit your profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

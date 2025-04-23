@@ -1,22 +1,169 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2>Nutrition Analyzer</h2>
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold mb-8 text-btn">Nutrition Analyzer</h2>
 
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="file" name="image" accept="image/*" required>
-    <button type="submit">Analyze</button>
-  </form>
+    <div class="my-8">
+        <form method="post" enctype="multipart/form-data" id="uploadForm" class="bg-white rounded-lg shadow-lg p-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- File Upload -->
+                <div class="bg-card p-6 rounded-lg text-white transform transition hover:-translate-y-1 hover:shadow-lg relative overflow-hidden" 
+                     style="box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2);">
+                    <div class="absolute inset-0 rounded-lg" style="box-shadow: inset 0 0 8px 1px rgba(0, 0, 0, 0.15);"></div>
+                    <div class="relative z-10">
+                        <h3 class="text-xl font-bold mb-4">Upload Image</h3>
+                        <div class="text-center">
+                            <input type="file" id="fileInput" name="image" accept="image/*" class="hidden">
+                            <label for="fileInput" class="bg-white text-btn font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1 cursor-pointer">
+                                <i class="fas fa-upload mr-2"></i> Choose File
+                            </label>
+                        </div>
+                    </div>
+                </div>
 
-  {% if result %}
-  <h3>Result:</h3>
-  <div style="padding: 1rem; border: 1px solid #ddd; border-radius: 8px;">
-    {{ result|safe }}
-  </div>
-{% endif %}
+                <!-- Camera Capture -->
+                <div class="bg-card p-6 rounded-lg text-white transform transition hover:-translate-y-1 hover:shadow-lg relative overflow-hidden" 
+                     style="box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2);">
+                    <div class="absolute inset-0 rounded-lg" style="box-shadow: inset 0 0 8px 1px rgba(0, 0, 0, 0.15);"></div>
+                    <div class="relative z-10">
+                        <h3 class="text-xl font-bold mb-4">Use Camera</h3>
+                        <div class="text-center">
+                            <video id="cameraPreview" autoplay playsinline class="hidden mx-auto mb-4 rounded-lg w-full max-w-xs"></video>
+                            <canvas id="cameraCanvas" class="hidden"></canvas>
+                            <button type="button" id="startCamera" class="bg-white text-btn font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1">
+                                <i class="fas fa-camera mr-2"></i> Start Camera
+                            </button>
+                            <button type="button" id="captureButton" class="hidden bg-white text-btn font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1">
+                                <i class="fas fa-circle mr-2"></i> Capture
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Image Previews -->
+            <div id="imagePreviews" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6"></div>
 
-  {% if error %}
-    <p style="color: red;">{{ error }}</p>
-  {% endif %}
+            <button type="submit" class="bg-btn text-white font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1 w-full">
+                <i class="fas fa-search mr-2"></i> Analyze Now
+            </button>
+        </form>
+    </div>
+
+    {% if error %}
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-6 rounded shadow-md">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle mr-3"></i>
+            <p>{{ error }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if result %}
+    <div class="my-8 bg-white rounded-lg shadow-lg p-6">
+        <h3 class="text-2xl font-bold mb-4 text-btn">Analysis Results</h3>
+        <div class="result-content">
+            {{ result|safe }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script>
+    // Camera functionality
+    const startCamera = document.getElementById('startCamera');
+    const captureButton = document.getElementById('captureButton');
+    const cameraPreview = document.getElementById('cameraPreview');
+    const cameraCanvas = document.getElementById('cameraCanvas');
+    const previewContainer = document.getElementById('imagePreviews');
+    let stream = null;
+
+    startCamera.addEventListener('click', async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                }
+            });
+            cameraPreview.srcObject = stream;
+            cameraPreview.classList.remove('hidden');
+            startCamera.classList.add('hidden');
+            captureButton.classList.remove('hidden');
+        } catch (err) {
+            alert('Error accessing camera: ' + err);
+        }
+    });
+
+    captureButton.addEventListener('click', () => {
+        cameraCanvas.width = cameraPreview.videoWidth;
+        cameraCanvas.height = cameraPreview.videoHeight;
+        const ctx = cameraCanvas.getContext('2d');
+        ctx.drawImage(cameraPreview, 0, 0);
+
+        // Create preview image
+        const dataUrl = cameraCanvas.toDataURL('image/jpeg');
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.className = 'w-full h-40 object-cover rounded-lg shadow border-2 border-gray-200';
+        previewContainer.appendChild(img);
+
+        // Create hidden input
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'camera_image';
+        input.value = dataUrl;
+        document.getElementById('uploadForm').appendChild(input);
+    });
+
+    // Handle form submission
+    document.getElementById('uploadForm').addEventListener('submit', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+
+    // Preview uploaded file
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'w-full h-40 object-cover rounded-lg shadow border-2 border-gray-200';
+                previewContainer.appendChild(img);
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+</script>
+
+<style>
+    :root {
+        --bg-color: #FFD0Da;
+        --card-color: #fd5da8;
+        --nav-footer-color: #e11584;
+        --button-color: #ff007f;
+    }
+    body {
+        background-color: var(--bg-color);
+    }
+    .bg-nav-footer {
+        background-color: var(--nav-footer-color);
+    }
+    .bg-card {
+        background-color: var(--card-color);
+    }
+    .bg-btn {
+        background-color: var(--button-color);
+    }
+    .text-btn {
+        color: var(--button-color);
+    }
+</style>
 {% endblock %}

@@ -16,7 +16,8 @@ import os
 from reports import PregnancyUltrasoundAnalyzer
 import base64
 
-
+import logging
+logger = logging.getLogger(__name__)
 
 def register(request):
     if request.method == 'POST':
@@ -318,18 +319,34 @@ import markdown
 def nutrition_tool(request):
     result = None
     error = None
+    image_data = None
 
     if request.method == 'POST':
+        # Handle file upload
         uploaded_file = request.FILES.get('image')
-        if uploaded_file:
-            try:
+        camera_image = request.POST.get('camera_image')
+
+        try:
+            if uploaded_file:
+                # Process regular file upload
                 file_bytes = uploaded_file.read()
                 extension = os.path.splitext(uploaded_file.name)[-1]
-                raw_result = analyze_image_file(file_bytes, file_extension=extension)
-                result = markdown.markdown(raw_result)  # <-- This line converts markdown to HTML
-            except Exception as e:
-                error = f"Error analyzing image: {str(e)}"
+                analysis = analyze_image_file(file_bytes, file_extension=extension)
+                result = markdown.markdown(analysis)
+                
+            elif camera_image:
+                # Process camera capture (base64)
+                format, imgstr = camera_image.split(';base64,') 
+                file_bytes = base64.b64decode(imgstr)
+                analysis = analyze_image_file(file_bytes, file_extension='.jpg')
+                result = markdown.markdown(analysis)
+                
+            else:
+                error = "Please upload an image or capture using camera"
 
+        except Exception as e:
+            error = f"Error analyzing image: {str(e)}"
+            logger.error(f"Nutrition tool error: {str(e)}")
 
     return render(request, 'maa/nutrition_tool.html', {
         'result': result,
@@ -367,7 +384,7 @@ def nutrition_tracker(request):
         if 'generate_report' in request.POST:
             report_md = generate_nutrition_report(request.user.id)
             print(request.user.id)
-            report_html = markdown(report_md)
+            report_html = markdown.markdown(report_md)
         elif form.is_valid():
             sel_date = form.cleaned_data['date']
             for slot in ['morning', 'noon', 'evening', 'night']:
@@ -470,6 +487,8 @@ from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
 import markdown
 
+from .report_formatter import format_report # Import the function
+
 @login_required
 def ultrasound_analysis(request):
     report = None
@@ -507,11 +526,25 @@ def ultrasound_analysis(request):
                 analyzer = PregnancyUltrasoundAnalyzer()
                 raw_result = analyzer.analyze(file_paths)
                 report = markdown.markdown(raw_result) 
+                
+            if report:
+                formatted_report = format_report(report)
+            else:
+                formatted_report = "" #Or default message 
+            
+            for path in file_paths:
+                with open(path, 'rb') as f:
+                    encoded = base64.b64encode(f.read()).decode('utf-8')
+                    mime = 'image/png' if path.endswith('.png') else 'image/jpeg'
+                    image_data_urls.append(f"data:{mime};base64,{encoded}")
             
             # Clean up files
             for path in file_paths:
                 if os.path.exists(path):
                     os.remove(path)
+             
+             
+              
                     
         except Exception as e:
             error = f"Error analyzing ultrasound: {str(e)}"

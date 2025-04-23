@@ -1,70 +1,80 @@
-{% extends 'base.html' %} {% block content %}
-<div class="ultrasound-container">
-    <h2>Ultrasound Report Analysis</h2>
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold mb-6 text-btn">Ultrasound Report Analysis</h2>
 
-    <div class="upload-section">
-        <h3>Upload or Capture Ultrasound Images</h3>
-        <p>For best results, provide clear images of your ultrasound scans.</p>
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h3 class="text-xl font-bold mb-3 text-btn">Upload or Capture Ultrasound Images</h3>
+        <p class="text-gray-700 mb-6">For best results, provide clear images of your ultrasound scans.</p>
 
-        <div class="upload-options">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <!-- File Upload Option -->
-            <div class="upload-option">
-                <h4>Upload Images</h4>
-                <form method="post" enctype="multipart/form-data" id="uploadForm">
-                    {% csrf_token %}
-                    <div class="file-upload">
-                        <input type="file" id="fileInput" name="ultrasound_images" multiple accept="image/*" capture="environment">
-                        <label for="fileInput" class="file-upload-label">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <span>Choose Files</span>
-                        </label>
-                        <p>Supports JPG, PNG (max 5MB each)</p>
-                    </div>
-                </form>
+            <div class="bg-card p-6 rounded-lg text-white transform transition hover:-translate-y-1 hover:shadow-lg relative overflow-hidden" 
+                 style="box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2);">
+                <div class="absolute inset-0 rounded-lg" style="box-shadow: inset 0 0 8px 1px rgba(0, 0, 0, 0.15);"></div>
+                <div class="relative z-10">
+                    <h4 class="text-lg font-bold mb-4">Upload Images</h4>
+                    <form method="post" enctype="multipart/form-data" id="uploadForm">
+                        {% csrf_token %}
+                        <div class="text-center">
+                            <input type="file" id="fileInput" name="ultrasound_images" multiple accept="image/*" capture="environment" class="hidden">
+                            <label for="fileInput" class="bg-white text-btn font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1 cursor-pointer">
+                                <i class="fas fa-cloud-upload-alt mr-2"></i>
+                                Choose Files
+                            </label>
+                            <p class="mt-3 text-sm">Supports JPG, PNG (max 5MB each)</p>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- Camera Capture Option -->
-            <div class="upload-option">
-                <h4>Use Camera</h4>
-                <div class="camera-container">
-                    <video id="cameraPreview" autoplay playsinline style="display:none;"></video>
-                    <canvas id="cameraCanvas" style="display:none;"></canvas>
-                    <button id="startCamera" class="camera-button">
-                        <i class="fas fa-camera"></i> Start Camera
-                    </button>
-                    <button id="captureButton" class="camera-button" style="display:none;">
-                        <i class="fas fa-circle"></i> Capture Image
-                    </button>
-                    <button id="stopCamera" class="camera-button" style="display:none;">
-                        <i class="fas fa-stop"></i> Stop Camera
-                    </button>
+            <div class="bg-card p-6 rounded-lg text-white transform transition hover:-translate-y-1 hover:shadow-lg relative overflow-hidden" 
+                 style="box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2);">
+                <div class="absolute inset-0 rounded-lg" style="box-shadow: inset 0 0 8px 1px rgba(0, 0, 0, 0.15);"></div>
+                <div class="relative z-10">
+                    <h4 class="text-lg font-bold mb-4">Use Camera</h4>
+                    <div class="text-center">
+                        <video id="cameraPreview" autoplay playsinline class="hidden mx-auto mb-4 rounded-lg w-full"></video>
+                        <canvas id="cameraCanvas" class="hidden"></canvas>
+                        <div class="space-y-3">
+                            <button id="startCamera" class="bg-white text-btn font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1">
+                                <i class="fas fa-camera mr-2"></i> Start Camera
+                            </button>
+                            <button id="captureButton" class="hidden bg-white text-btn font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1">
+                                <i class="fas fa-circle mr-2"></i> Capture Image
+                            </button>
+                            <button id="stopCamera" class="hidden bg-white text-btn font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1">
+                                <i class="fas fa-stop mr-2"></i> Stop Camera
+                            </button>
+                        </div>
+                    </div>
+                    <div id="capturedImages" class="grid grid-cols-3 gap-2 mt-4"></div>
                 </div>
-                <div id="capturedImages"></div>
             </div>
         </div>
 
-        <button type="submit" form="uploadForm" class="analyze-button">
-            <i class="fas fa-search"></i> Analyze Images
+        <div id="previewArea" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6"></div>
+
+        <button type="submit" form="uploadForm" class="bg-btn text-white font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1 w-full mt-6">
+            <i class="fas fa-search mr-2"></i> Analyze Images
         </button>
     </div>
 
     {% if error %}
-    <div class="error-message">
-        <i class="fas fa-exclamation-triangle"></i> {{ error }}
-    </div>
-    {% endif %} {% if report %}
-    <div class="report-section">
-        <h3>Your Analysis Report</h3>
-        <div class="report-content">
-            {{ report|safe }}
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-6 rounded shadow-md">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle mr-3"></i>
+            <p>{{ error }}</p>
         </div>
-        <div class="report-actions">
-            <button onclick="window.print()" class="action-button">
-                <i class="fas fa-print"></i> Print Report
-            </button>
-            <button onclick="downloadReport()" class="action-button">
-                <i class="fas fa-download"></i> Download PDF
-            </button>
+    </div>
+    {% endif %}
+    
+    {% if report %}
+    <div class="bg-white rounded-lg shadow-lg p-6 my-8">
+        <h3 class="text-2xl font-bold mb-4 text-btn">Your Analysis Report</h3>
+        <div class="report-content border-t pt-4">
+            {{ report|safe }}
         </div>
     </div>
     {% endif %}
@@ -73,118 +83,25 @@
 <!-- Include Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-<style>
-    .ultrasound-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-    
-    .upload-section {
-        background: #f8f9fa;
-        padding: 25px;
-        border-radius: 10px;
-        margin-bottom: 30px;
-    }
-    
-    .upload-options {
-        display: flex;
-        gap: 20px;
-        margin: 20px 0;
-        flex-wrap: wrap;
-    }
-    
-    .upload-option {
-        flex: 1;
-        min-width: 300px;
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    
-    .file-upload {
-        margin: 15px 0;
-        text-align: center;
-    }
-    
-    .file-upload-label {
-        display: inline-block;
-        padding: 12px 20px;
-        background: #4CAF50;
-        color: white;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-    
-    .file-upload-label:hover {
-        background: #3e8e41;
-    }
-    
-    .file-upload input[type="file"] {
-        display: none;
-    }
-    
-    .camera-container {
-        text-align: center;
-        margin: 15px 0;
-    }
-    
-    .camera-button {
-        padding: 10px 15px;
-        background: #2196F3;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        margin: 5px;
-        cursor: pointer;
-    }
-    
-    #capturedImages {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 15px;
-    }
-    
-    .captured-image {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
-        border: 2px solid #ddd;
-        border-radius: 5px;
-    }
-    
-    .analyze-button {
-        background: #4CAF50;
-        color: white;
-        padding: 12px 25px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-top: 15px;
-        width: 100%;
-    }
-    
-    .report-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 15px;
-    }
-    
-    .action-button {
-        padding: 8px 15px;
-        background: #2196F3;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-</style>
-
 <script>
+    document.getElementById('fileInput').addEventListener('change', function (event) {
+        const preview = document.getElementById('previewArea');
+        preview.innerHTML = ''; // Clear previous
+        const files = event.target.files;
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Preview';
+                img.className = 'w-full h-40 object-cover rounded-lg shadow border-2 border-gray-200';
+                preview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
     // Camera functionality
     const startCamera = document.getElementById('startCamera');
     const stopCamera = document.getElementById('stopCamera');
@@ -211,10 +128,10 @@
                 audio: false
             });
             cameraPreview.srcObject = stream;
-            cameraPreview.style.display = 'block';
-            startCamera.style.display = 'none';
-            captureButton.style.display = 'inline-block';
-            stopCamera.style.display = 'inline-block';
+            cameraPreview.classList.remove('hidden');
+            startCamera.classList.add('hidden');
+            captureButton.classList.remove('hidden');
+            stopCamera.classList.remove('hidden');
         } catch (err) {
             alert('Could not access the camera: ' + err);
         }
@@ -223,10 +140,10 @@
     stopCamera.addEventListener('click', () => {
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
-            cameraPreview.style.display = 'none';
-            startCamera.style.display = 'inline-block';
-            captureButton.style.display = 'none';
-            stopCamera.style.display = 'none';
+            cameraPreview.classList.add('hidden');
+            startCamera.classList.remove('hidden');
+            captureButton.classList.add('hidden');
+            stopCamera.classList.add('hidden');
         }
     });
 
@@ -246,7 +163,7 @@
         // Display captured image
         const img = document.createElement('img');
         img.src = imageDataUrl;
-        img.className = 'captured-image';
+        img.className = 'w-full h-20 object-cover rounded-lg shadow border border-white';
         capturedImages.appendChild(img);
 
         // Create hidden input for form submission
@@ -263,10 +180,76 @@
             stream.getTracks().forEach(track => track.stop());
         }
     });
-
-    function downloadReport() {
-        // Implement PDF download functionality
-        alert('PDF download functionality would be implemented here');
-    }
 </script>
+
+<style>
+    :root {
+        --bg-color: #FFD0Da;
+        --card-color: #fd5da8;
+        --nav-footer-color: #e11584;
+        --button-color: #ff007f;
+    }
+    body {
+        background-color: var(--bg-color);
+    }
+    .bg-nav-footer {
+        background-color: var(--nav-footer-color);
+    }
+    .bg-card {
+        background-color: var(--card-color);
+    }
+    .bg-btn {
+        background-color: var(--button-color);
+    }
+    .text-btn {
+        color: var(--button-color);
+    }
+
+    .report-container {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+.report-title {
+    font-size: 2em;
+    color: var(--button-color);
+    margin-bottom: 0.5em;
+    text-align: center;
+}
+
+.report-section {
+    margin-bottom: 1.5em;
+    padding: 1em;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.section-title {
+    font-size: 1.5em;
+    color: var(--nav-footer-color);
+    margin-bottom: 0.75em;
+    border-bottom: 2px solid var(--card-color);
+    padding-bottom: 0.25em;
+}
+
+ul {
+    margin-bottom: 1em;
+}
+
+li {
+    margin-bottom: 0.5em;
+}
+.patient-explanation {
+    font-style: italic;
+    color: #777;
+}
+.final-note {
+  text-align: center;
+  font-size: 1.2em;
+  color: var(--button-color);
+  font-weight: bold;
+}
+</style>
 {% endblock %}

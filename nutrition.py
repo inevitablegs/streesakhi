@@ -74,6 +74,7 @@ def get_agent():
         instructions=INSTRUCTIONS,
         tools=[TavilyTools(api_key=TAVILY_API_KEY)],
         markdown=True,
+        debug_mode=True,
     )
 
 def analyze_image(image_path):
