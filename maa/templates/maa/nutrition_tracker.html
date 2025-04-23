@@ -40,7 +40,24 @@
     </table>
 
     <button type="submit" style="margin-top:1em;">Save Day’s Intake</button>
+
+    
   </form>
+
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" name="generate_report" class="bg-blue-600 text-white px-4 py-2 rounded">
+      Generate Nutrition Report
+    </button>
+  </form>
+  
+  {% if report_html %}
+  <div class="nutrition-report mt-4 prose max-w-none">
+    {{ report_html|safe }}
+  </div>
+  {% endif %}
+  
 
   <h3 style="margin-top:2em;">Last 7 Days Summary</h3>
   <table style="border-collapse: collapse; width:100%; max-width:800px;">

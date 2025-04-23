@@ -313,6 +313,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from nutrition import analyze_image_file
 import markdown
+
 @login_required
 def nutrition_tool(request):
     result = None
@@ -348,50 +349,126 @@ from datetime import date, timedelta
 from collections import OrderedDict
 from datetime import date, timedelta
 
+from django.utils import timezone
+from markdown import markdown
+from collections import OrderedDict
+from datetime import date, timedelta
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import NutritionEntry
+from .forms import NutritionDayForm  # make sure you're importing the correct form
+
 @login_required
 def nutrition_tracker(request):
     form = NutritionDayForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        sel_date = form.cleaned_data['date']
-        for slot in ['morning','noon','evening','night']:
-            choice = form.cleaned_data[f'{slot}_choice']
-            manual = form.cleaned_data[f'{slot}_manual']
-            desc = choice or manual
-            if desc:
-                NutritionEntry.objects.update_or_create(
-                    user=request.user,
-                    date=sel_date,
-                    time_slot=slot.upper(),
-                    defaults={'description': desc}
-                )
-        return redirect('nutrition_tracker')
+    report_html = None
 
-    # last 7 days
-    today    = date.today()
+    if request.method == 'POST':
+        if 'generate_report' in request.POST:
+            report_md = generate_nutrition_report(request.user.id)
+            print(request.user.id)
+            report_html = markdown(report_md)
+        elif form.is_valid():
+            sel_date = form.cleaned_data['date']
+            for slot in ['morning', 'noon', 'evening', 'night']:
+                choice = form.cleaned_data[f'{slot}_choice']
+                manual = form.cleaned_data[f'{slot}_manual']
+                desc = choice or manual
+                if desc:
+                    NutritionEntry.objects.update_or_create(
+                        user=request.user,
+                        date=sel_date,
+                        time_slot=slot.upper(),
+                        defaults={'description': desc}
+                    )
+            return redirect('nutrition_tracker')
+
+    # Build the summary for the last 7 days
+    today = date.today()
     week_ago = today - timedelta(days=6)
     entries = NutritionEntry.objects.filter(
         user=request.user,
         date__range=[week_ago, today]
     )
 
-    # build summary with lowercase keys
     summary = OrderedDict()
     for i in range(7):
         d = week_ago + timedelta(days=i)
-        summary[d] = {'morning':'','noon':'','evening':'','night':''}
+        summary[d] = {'morning': '', 'noon': '', 'evening': '', 'night': ''}
 
     for e in entries:
         summary[e.date][e.time_slot.lower()] = e.description
 
     return render(request, 'maa/nutrition_tracker.html', {
-        'form':    form,
+        'form': form,
         'summary': summary,
+        'report_html': report_html,
     })
+
+
+
+from phi.agent import Agent
+from phi.tools.sql import SQLTools
+from phi.model.google import Gemini
+
+def generate_nutrition_report(user_id):
+    agent = Agent(
+        tools=[SQLTools(db_url="sqlite:///db.sqlite3")],
+        model=Gemini(id="gemini-2.0-flash-exp", temperature=0.4),
+    )
+    
+    prompt = f"""
+        You are a personalized nutrition coach for a pregnant woman living in the North‑East region of India.  
+        Her daily food/drink logs for the last 2 days are stored in the table `maa_nutritionentry` with columns:
+        - `date`  
+        - `time_slot` (MORNING/NOON/EVENING/NIGHT)  
+        - `description` (free‑text of what she ate or drank, likely including rice dishes, fish curries, bamboo shoot preparations, fermented chutneys, local greens, seasonal fruits, etc.)  
+
+        **Step 1: Data retrieval**  
+        Use SQL to fetch exactly those rows for `user_id = {user_id}` where `date >= date('now','-1 days')`, sorted by `date ASC`, `time_slot ASC`.  
+
+        **Step 2: Nutrient breakdown with regional context**  
+        From each `description`, infer approximate quantities of:
+        - **Macros**: protein (e.g. fish, eggs, legumes), carbohydrates (e.g. rice, black rice, sticky rice), fats (e.g. mustard oil, groundnut oil)
+        - **Key micros**: iron (leafy greens like spinach, mustard greens), calcium (milk, local cheeses, tofu), folate (bamboo shoots, green leafy vegetables), vitamin D (sun‑exposed mushrooms, egg yolks), omega‑3 (freshwater fish), fiber (local vegetables, seasonal fruits), water
+
+        Use your knowledge of North‑East Indian recipes (e.g. fish tenga, khar, smoked meats, sohnt–a fermented fish paste) to estimate servings and nutrient content.
+
+        **Step 3: Summary of intake**  
+        Produce a table showing for each nutrient:
+        - **Total** consumed over the 2‑day period  
+        - **Daily average**  
+        - **Recommended range** per ICMR/WHO guidelines for pregnant women in India  
+
+        Color‑code cells:  
+        - 🔴 over‑consumed  
+        - 🔵 under‑consumed  
+        - 🟢 on target  
+
+        **Step 4: Actionable insights**  
+        For each nutrient off‑target:
+        - Brief note on health implications (e.g. “Low iron can worsen anemia, fatigue”)  
+        - Suggest 2–3 local foods or simple recipes (e.g. “Include a small bowl of saag tutum with mustard greens”, “Snack on boiled rice flakes with jaggery and coconut”)  
+
+        **Step 5: Forward recommendations**  
+        Based on current trends, craft a **2‑day sample meal plan** (breakfast, lunch, dinner, snacks) using North‑East staples (rice, fish, bamboo shoots, fermented chutneys, seasonal fruits) to balance nutrients.
+
+        **Bonus features:**  
+        - A daily **hydration reminder** (“Sip warm water or herbal ginger tea between meals”)  
+        - A habit tip (“Keep a small jar of roasted chana for quick protein boosts”)  
+        - A 3‑point “To‑Do” checklist (e.g. “Eat an extra serving of green leafy vegetables tomorrow”)
+
+        Deliver the entire report as **Markdown**, with clear headings, tables, and color‑coded nutrient summaries.
+"""
+    
+    response = agent.run(prompt)
+    return response.content
 
 
 
 from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
+import markdown
 
 @login_required
 def ultrasound_analysis(request):
@@ -428,7 +505,8 @@ def ultrasound_analysis(request):
             
             if file_paths:
                 analyzer = PregnancyUltrasoundAnalyzer()
-                report = analyzer.analyze(file_paths)
+                raw_result = analyzer.analyze(file_paths)
+                report = markdown.markdown(raw_result) 
             
             # Clean up files
             for path in file_paths:
@@ -506,3 +584,5 @@ def medicine_analysis(request):
         'error': error,
         'image_data_urls': image_data_urls
     })
+    
+    
