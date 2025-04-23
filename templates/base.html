@@ -1,18 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Streesakhi</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tailwind CSS from CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #FFD0Da;
+            --card-color: #fd5da8;
+            --nav-footer-color: #e11584;
+            --button-color: #ff007f;
+        }
+        body {
+            background-color: var(--bg-color);
+        }
+        .bg-nav-footer {
+            background-color: var(--nav-footer-color);
+        }
+        .bg-card {
+            background-color: var(--card-color);
+        }
+        .bg-btn {
+            background-color: var(--button-color);
+        }
+        .text-btn {
+            color: var(--button-color);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <div>
-        {% if user.is_authenticated %}
-            <p>Welcome, {{ user.username }}! <a href="{% url 'logout' %}">Logout</a></p>
-        {% else %}
-            <p><a href="{% url 'login' %}">Login</a> | <a href="{% url 'register' %}">Register</a></p>
-        {% endif %}
-    </div>
-    <div>
+<body class="font-sans leading-normal tracking-normal">
+    <nav class="bg-nav-footer text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="text-2xl font-bold tracking-wider">Streesakhi</div>
+            <div class="space-x-6">
+                {% if user.is_authenticated %}
+                    <span>Welcome, {{ user.username }}!</span>
+                    <a href="{% url 'logout' %}" class="hover:underline">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="hover:underline">Login</a>
+                    <a href="{% url 'register' %}" class="hover:underline">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
         {% block content %}{% endblock %}
     </div>
+
+    <footer class="bg-nav-footer text-white py-8 px-4">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 Streesakhi - AI-Driven Maternal Health Risk Assessment | Making motherhood safer in Assam</p>
+            <div class="mt-4 space-x-4">
+                <a href="#" class="text-white hover:underline">About</a>
+                <a href="#" class="text-white hover:underline">Privacy</a>
+                <a href="#" class="text-white hover:underline">Contact</a>
+            </div>
+        </div>
+    </footer>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

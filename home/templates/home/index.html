@@ -1,11 +1,150 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Streesakhi</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tailwind CSS from CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #FFD0Da;
+            --card-color: #fd5da8;
+            --nav-footer-color: #e11584;
+            --button-color: #ff007f;
+        }
+        body {
+            background-color: var(--bg-color);
+        }
+        .bg-nav-footer {
+            background-color: var(--nav-footer-color);
+        }
+        .bg-card {
+            background-color: var(--card-color);
+        }
+        .bg-btn {
+            background-color: var(--button-color);
+        }
+        .text-btn {
+            color: var(--button-color);
+        }
+    </style>
+</head>
+<body class="font-sans leading-normal tracking-normal">
+    <nav class="bg-nav-footer text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="text-2xl font-bold tracking-wider">Streesakhi</div>
+            <div class="space-x-6">
+                {% if user.is_authenticated %}
+                    <span>Welcome, {{ user.username }}!</span>
+                    <a href="{% url 'logout' %}" class="hover:underline">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="hover:underline">Login</a>
+                    <a href="{% url 'register' %}" class="hover:underline">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
 
-{% block content %}
-  <h1>Welcome to Streesakhi</h1>
-  <p>This is the homepage.</p>
+    <div class="container mx-auto px-4 py-8">
+        {% block content %}
+        <section class="my-12">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="md:w-1/2">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4 text-btn">Welcome to Streesakhi</h1>
+                    <p class="text-lg mb-6 text-gray-800">Empowering maternal healthcare in Assam through AI-driven risk assessment. Streesakhi helps identify high-risk pregnancies early, bringing expert care to where it's needed most.</p>
+                    <div class="space-x-4">
+                        <a href="{% url 'register' %}" class="bg-btn text-white font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1">Register Now</a>
+                        <a href="{% url 'login' %}" class="bg-btn text-white font-bold py-3 px-6 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1">Login</a>
+                    </div>
+                </div>
+                <div class="md:w-1/2 mt-8 md:mt-0">
+                    <img src="/api/placeholder/500/350" alt="Mother and child healthcare illustration" class="rounded-lg shadow-lg w-full">
+                </div>
+            </div>
+        </section>
 
-  <p>
-    <a href="{% url 'register' %}">Register</a> |
-    <a href="{% url 'login' %}">Login</a>
-  </p>
-{% endblock %}
+        <section class="my-16">
+          <h2 class="text-3xl font-bold mb-8 text-btn">Why Choose Streesakhi?</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div class="bg-card p-6 rounded-lg text-white transform transition hover:-translate-y-1 hover:shadow-lg relative overflow-hidden" 
+                   style="box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2); position: relative;">
+                  <div class="absolute inset-0 rounded-lg" style="box-shadow: inset 0 0 8px 1px rgba(0, 0, 0, 0.15);"></div>
+                  <div class="relative z-10">
+                      <h3 class="text-xl font-bold mb-4">Early Risk Detection</h3>
+                      <p>Our AI algorithm analyzes antenatal records and sociodemographic factors to identify high-risk pregnancies before complications arise.</p>
+                  </div>
+              </div>
+              <div class="bg-card p-6 rounded-lg text-white transform transition hover:-translate-y-1 hover:shadow-lg relative overflow-hidden" 
+                   style="box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2); position: relative;">
+                  <div class="absolute inset-0 rounded-lg" style="box-shadow: inset 0 0 8px 1px rgba(0, 0, 0, 0.15);"></div>
+                  <div class="relative z-10">
+                      <h3 class="text-xl font-bold mb-4">Personalized Care</h3>
+                      <p>Healthcare providers receive actionable insights to provide timely and customized care for each mother.</p>
+                  </div>
+              </div>
+              <div class="bg-card p-6 rounded-lg text-white transform transition hover:-translate-y-1 hover:shadow-lg relative overflow-hidden" 
+                   style="box-shadow: 0 0 15px 2px rgba(0, 0, 0, 0.2); position: relative;">
+                  <div class="absolute inset-0 rounded-lg" style="box-shadow: inset 0 0 8px 1px rgba(0, 0, 0, 0.15);"></div>
+                  <div class="relative z-10">
+                      <h3 class="text-xl font-bold mb-4">Accessibility</h3>
+                      <p>Designed specifically for Assam's healthcare landscape, bridging the gap between remote areas and quality maternal care.</p>
+                  </div>
+              </div>
+          </div>
+      </section>
+
+        <section class="my-16 bg-nav-footer text-white p-8 rounded-lg text-center">
+            <h2 class="text-3xl font-bold mb-4">Join Our Mission to Reduce Maternal Mortality</h2>
+            <p class="text-lg mb-6">Together, we can bring the MMR in Assam closer to the national average and save lives.</p>
+            <a href="{% url 'register' %}" class="text-white font-bold py-3 px-8 rounded-full inline-block hover:shadow-lg transition transform hover:-translate-y-1" style="background-color: #FA86C4; color: #000000;" >Get Started</a>
+        </section>
+
+        <section class="my-16">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="md:w-1/2">
+                    <h2 class="text-3xl font-bold mb-4 text-btn">How It Works</h2>
+                    <ul class="space-y-4 text-gray-800">
+                        <li class="flex items-start">
+                            <span class="bg-btn text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1">1</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Data Collection</h3>
+                                <p>Gather antenatal records and socio-demographic information from patients.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="bg-btn text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1">2</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Risk Assessment</h3>
+                                <p>Our AI algorithm analyzes the data to calculate personalized risk scores.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="bg-btn text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1">3</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Early Intervention</h3>
+                                <p>Healthcare providers receive alerts for high-risk cases, enabling timely intervention.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="md:w-1/2 mt-8 md:mt-0">
+                    <img src="/api/placeholder/500/400" alt="Streesakhi process illustration" class="rounded-lg shadow-lg w-full">
+                </div>
+            </div>
+        </section>
+        {% endblock %}
+    </div>
+
+    <footer class="bg-nav-footer text-white py-8 px-4">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 Streesakhi - AI-Driven Maternal Health Risk Assessment | Making motherhood safer in Assam</p>
+            <div class="mt-4 space-x-4">
+                <a href="#" class="text-white hover:underline">About</a>
+                <a href="#" class="text-white hover:underline">Privacy</a>
+                <a href="#" class="text-white hover:underline">Contact</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
